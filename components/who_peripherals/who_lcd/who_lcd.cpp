@@ -58,7 +58,11 @@ void WhoLCD::init()
         .hdmi_resolution = BSP_HDMI_RES_NONE,
 #endif
         .dsi_bus = {
-            .phy_clk_src = MIPI_DSI_PHY_CLK_SRC_DEFAULT,
+#if CONFIG_ESP32P4_SELECTS_REV_LESS_V3
+            .phy_clk_src = MIPI_DSI_PHY_PLLREF_CLK_SRC_DEFAULT_LEGACY,
+#else
+            .phy_clk_src = MIPI_DSI_PHY_PLLREF_CLK_SRC_DEFAULT,
+#endif
             .lane_bit_rate_mbps = BSP_LCD_MIPI_DSI_LANE_BITRATE_MBPS,
         }};
     bsp_display_new_with_handles(&bsp_disp_cfg, &m_lcd_handles);

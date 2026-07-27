@@ -24,9 +24,9 @@ WhoRecognitionButtonPhysical::WhoRecognitionButtonPhysical(recognition::WhoRecog
     m_btns = new button_handle_t[BSP_BUTTON_NUM];
     ESP_ERROR_CHECK(bsp_iot_button_create(m_btns, NULL, BSP_BUTTON_NUM));
 #ifdef BSP_BOARD_ESP32_S3_EYE
-    int recognize = BSP_BUTTON_PLAY;
-    int enroll = BSP_BUTTON_UP;
-    int del = BSP_BUTTON_DOWN;
+    int recognize = BSP_BUTTON_2;
+    int enroll = BSP_BUTTON_4;
+    int del = BSP_BUTTON_3;
 #elif defined(BSP_BOARD_ESP32_S3_KORVO_2)
     int recognize = BSP_BUTTON_PLAY;
     int enroll = BSP_BUTTON_VOLUP;

@@ -37,11 +37,10 @@ void run_detect_lcd()
 {
     WhoFrameCapNode *lcd_disp_frame_cap_node = nullptr;
 #if CONFIG_IDF_TARGET_ESP32S3
-    auto frame_cap = get_lcd_dvp_frame_cap_pipeline();
+    auto frame_cap = get_dvp_frame_cap_pipeline(true);
 #elif CONFIG_IDF_TARGET_ESP32P4
-    auto frame_cap = get_lcd_mipi_csi_frame_cap_pipeline();
-    // auto frame_cap = get_lcd_mipi_csi_ppa_frame_cap_pipeline(&lcd_disp_frame_cap_node);
-    // auto frame_cap = get_lcd_uvc_frame_cap_pipeline();
+    auto frame_cap = get_mipi_csi_frame_cap_pipeline(true);
+    // auto frame_cap = get_uvc_frame_cap_pipeline(true);
 #endif
     auto detect_app = new WhoDetectAppLCD({{255, 0, 0}}, frame_cap, lcd_disp_frame_cap_node);
     // create model later to avoid memory fragmentation.
@@ -52,11 +51,10 @@ void run_detect_lcd()
 void run_detect_term()
 {
 #if CONFIG_IDF_TARGET_ESP32S3
-    auto frame_cap = get_term_dvp_frame_cap_pipeline();
+    auto frame_cap = get_dvp_frame_cap_pipeline(false);
 #elif CONFIG_IDF_TARGET_ESP32P4
-    auto frame_cap = get_term_mipi_csi_frame_cap_pipeline();
-    // auto frame_cap = get_term_mipi_csi_ppa_frame_cap_pipeline();
-    // auto frame_cap = get_term_uvc_frame_cap_pipeline();
+    auto frame_cap = get_mipi_csi_frame_cap_pipeline(false);
+    // auto frame_cap = get_uvc_frame_cap_pipeline(false);
 #endif
     auto detect_app = new WhoDetectAppTerm(frame_cap);
     // create model later to avoid memory fragmentation.
@@ -74,8 +72,9 @@ extern "C" void app_main(void)
 
 // close led
 #ifdef BSP_BOARD_ESP32_S3_EYE
-    ESP_ERROR_CHECK(bsp_leds_init());
-    ESP_ERROR_CHECK(bsp_led_set(BSP_LED_GREEN, false));
+    led_indicator_handle_t leds[BSP_LED_NUM];
+    ESP_ERROR_CHECK(bsp_led_indicator_create(leds, NULL, BSP_LED_NUM));
+    ESP_ERROR_CHECK(bsp_led_set(leds[0], false));
 #endif
 
     run_detect_lcd();

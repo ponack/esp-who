@@ -10,7 +10,7 @@ extern "C" void app_main(void)
 {
     vTaskPrioritySet(xTaskGetCurrentTaskHandle(), 5);
 #if CONFIG_DB_FATFS_FLASH
-    ESP_ERROR_CHECK(fatfs_flash_mount());
+    ESP_ERROR_CHECK(spiflash_fatfs_mount());
 #elif CONFIG_DB_SPIFFS
     ESP_ERROR_CHECK(bsp_spiffs_mount());
 #endif
@@ -20,8 +20,9 @@ extern "C" void app_main(void)
 
 // close led
 #ifdef BSP_BOARD_ESP32_S3_EYE
-    ESP_ERROR_CHECK(bsp_leds_init());
-    ESP_ERROR_CHECK(bsp_led_set(BSP_LED_GREEN, false));
+    led_indicator_handle_t leds[BSP_LED_NUM];
+    ESP_ERROR_CHECK(bsp_led_indicator_create(leds, NULL, BSP_LED_NUM));
+    ESP_ERROR_CHECK(bsp_led_set(leds[0], false));
 #endif
 
 #if CONFIG_IDF_TARGET_ESP32S3

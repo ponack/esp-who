@@ -1,5 +1,5 @@
 #pragma once
-#include "who_cam_define.hpp"
+#include "video_capture.hpp"
 #include "who_task.hpp"
 #include "bsp/esp-bsp.h"
 
@@ -11,7 +11,7 @@ public:
     WhoTextResultLCDDisp(task::WhoTask *task, lv_obj_t *label, int disp_n_frames);
     ~WhoTextResultLCDDisp();
     void save_text_result(const std::string &text);
-    void lcd_disp_cb(who::cam::cam_fb_t *fb);
+    void lcd_disp_cb(VideoCapture::Frame *fb);
     void cleanup();
 
 private:

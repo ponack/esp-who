@@ -6,7 +6,7 @@ namespace who {
 namespace app {
 class WhoQRCodeAppBase : public WhoApp {
 public:
-    WhoQRCodeAppBase(frame_cap::WhoFrameCap *frame_cap);
+    WhoQRCodeAppBase(frame_cap::WhoFrameCap *frame_cap, int w, int h);
 
 protected:
     frame_cap::WhoFrameCap *m_frame_cap;

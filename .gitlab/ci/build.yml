@@ -24,10 +24,10 @@
       - "**/build*/bootloader/*.elf"
       - "**/build*/partition_table/*.bin"
       - "**/build*/size.json"
+      - "**/build*/*build.log"
       - "${EXAMPLE_DIR}/dependencies.lock*"
     expire_in: 1 week
   before_script:
-    - pip install --upgrade idf-component-manager
     - pip install idf_build_apps==2.10.1
   script:
     - python tools/ci/build_apps.py
@@ -38,7 +38,7 @@ build_example_object_detect:
     - .rules:build:example_object_detect
   parallel:
     matrix:
-      - IMAGE: [espressif/idf:release-v5.4, espressif/idf:release-v5.5]
+      - IMAGE: [espressif/idf:release-v5.4, espressif/idf:release-v5.5, espressif/idf:release-v6.0, espressif/idf:release-v6.1]
         SDKCONFIG_DEFAULTS: [sdkconfig.bsp.esp32_p4_function_ev_board_noglib, sdkconfig.bsp.esp32_s3_eye_noglib, sdkconfig.bsp.esp32_s3_korvo_2_noglib]
         DETECT_MODEL: [human_face_detect, pedestrian_detect, cat_detect, dog_detect]
   variables:
@@ -50,7 +50,7 @@ build_example_human_face_recognition:
     - .rules:build:example_human_face_recognition
   parallel:
     matrix:
-      - IMAGE: [espressif/idf:release-v5.4, espressif/idf:release-v5.5]
+      - IMAGE: [espressif/idf:release-v5.4, espressif/idf:release-v5.5, espressif/idf:release-v6.0, espressif/idf:release-v6.1]
         SDKCONFIG_DEFAULTS: [sdkconfig.bsp.esp32_p4_function_ev_board, sdkconfig.bsp.esp32_s3_eye, sdkconfig.bsp.esp32_s3_korvo_2]
   variables:
     EXAMPLE_DIR: examples/human_face_recognition
@@ -61,7 +61,7 @@ build_example_qrcode_recognition:
     - .rules:build:example_qrcode_recognition
   parallel:
     matrix:
-      - IMAGE: [espressif/idf:release-v5.4, espressif/idf:release-v5.5]
+      - IMAGE: [espressif/idf:release-v5.4, espressif/idf:release-v5.5, espressif/idf:release-v6.0, espressif/idf:release-v6.1]
         SDKCONFIG_DEFAULTS: [sdkconfig.bsp.esp32_p4_function_ev_board, sdkconfig.bsp.esp32_s3_eye]
   variables:
     EXAMPLE_DIR: examples/qrcode_recognition

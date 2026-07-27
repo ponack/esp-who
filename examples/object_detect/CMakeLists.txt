@@ -3,8 +3,7 @@
 cmake_minimum_required(VERSION 3.5)
 
 set(EXTRA_COMPONENT_DIRS ../../components/who_task
-                         ../../components/who_peripherals/who_usb
-                         ../../components/who_peripherals/who_cam
+                         ../../components/who_peripherals/esp_video_cxx
                          ../../components/who_peripherals/who_lcd
                          ../../components/who_frame_cap
                          ../../components/who_frame_lcd_disp
