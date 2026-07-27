@@ -34,6 +34,7 @@
   - [5.4. Dimensions](#54-dimensions)
   - [5.5. 3D Printed Case](#55-3d-printed-case)
   - [5.6. Reference Design](#56-reference-design)
+- [6. Disclaimer and Copyright Notice](#6-disclaimer-and-copyright-notice)
 
 This user guide will help you get started with ESP32-S3-EYE v2.2 and will also provide more in-depth information.
 
@@ -59,6 +60,7 @@ The document consists of the following major sections:
 -   [Hardware Reference](#3-hardware-reference): More detailed information about the board's hardware.
 -   [Hardware Revision Details](#4-hardware-revision-details): Hardware revision history, known issues, and links to user guides for previous versions (if any) of the board.
 -   [Related Documents](#5-related-documents): Links to related documentation.
+-   [Disclaimer and Copyright Notice](#6-disclaimer-and-copyright-notice): Link to the disclaimer and copyright notice.
 
 # 1. Getting Started
 
@@ -366,3 +368,7 @@ The following 3D model is a two-part case you can 3D print for your ESP32-S3-EYE
 - [ESP32-S3-EYE Reference Design](https://documentation.espressif.com/ESP32-S3-EYE_Reference_Design.zip)
 
 For further design documentation for the board, please contact us at [<sales@espressif.com>](sales@espressif.com).
+
+# 6. Disclaimer and Copyright Notice
+
+See [Disclaimer and Copyright Notice](../disclaimer-and-copyright.md).
