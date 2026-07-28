@@ -18,9 +18,9 @@ ESP-WHO 提供了人脸检测、人脸识别、行人检测、二维码识别等
 
 ## 支持的 ESP-IDF 版本
 
-| ESP-IDF <br> [Release/v5.4](https://github.com/espressif/esp-idf/tree/release/v5.4) | ESP-IDF <br> [Release/v5.5](https://github.com/espressif/esp-idf/tree/release/v5.5) |
-|-------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
-| :heavy_check_mark:                                                                  | :heavy_check_mark:                                                                  |
+| ESP-IDF <br> [Release/v5.4](https://github.com/espressif/esp-idf/tree/release/v5.4) | ESP-IDF <br> [Release/v5.5](https://github.com/espressif/esp-idf/tree/release/v5.5) | ESP-IDF <br> [Release/v6.0](https://github.com/espressif/esp-idf/tree/release/v6.0) | ESP-IDF <br> [Release/v6.1](https://github.com/espressif/esp-idf/tree/release/v6.1) |
+|-------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| :heavy_check_mark:                                                                  | :heavy_check_mark:                                                                  | :heavy_check_mark:                                                                  | :heavy_check_mark:                                                                  |
 
 ## 支持的开发版
 
