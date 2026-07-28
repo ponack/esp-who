@@ -7,13 +7,13 @@ namespace who {
 namespace app {
 class WhoQRCodeAppLCD : public WhoQRCodeAppTerm {
 public:
-    WhoQRCodeAppLCD(frame_cap::WhoFrameCap *frame_cap);
+    WhoQRCodeAppLCD(frame_cap::WhoFrameCap *frame_cap, int w, int h);
     ~WhoQRCodeAppLCD();
     bool run() override;
 
 protected:
     virtual void qrcode_result_cb(const std::string &result);
-    virtual void lcd_disp_cb(who::cam::cam_fb_t *fb);
+    virtual void lcd_disp_cb(VideoCapture::Frame *fb);
     virtual void cleanup();
 
 private:

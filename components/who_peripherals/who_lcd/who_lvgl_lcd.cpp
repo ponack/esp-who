@@ -21,28 +21,23 @@ void WhoLCD::init(const lvgl_port_cfg_t &lvgl_port_cfg)
     bool mirror_x = false;
     bool mirror_y = false;
 #endif
-    const lvgl_port_display_cfg_t disp_cfg = {
-        .io_handle = io_handle,
-        .panel_handle = panel_handle,
-        .buffer_size = BSP_LCD_DRAW_BUFF_SIZE,
-        .double_buffer = BSP_LCD_DRAW_BUFF_DOUBLE,
-        .hres = BSP_LCD_H_RES,
-        .vres = BSP_LCD_V_RES,
-        .monochrome = false,
-        /* Rotation values must be same as used in esp_lcd for initial settings of the screen */
-        .rotation =
-            {
-                .swap_xy = false,
-                .mirror_x = mirror_x,
-                .mirror_y = mirror_y,
-            },
-        .flags = {
-            .buff_dma = true,
-            .buff_spiram = false,
+    lvgl_port_display_cfg_t disp_cfg = {};
+    disp_cfg.io_handle = io_handle;
+    disp_cfg.panel_handle = panel_handle;
+    disp_cfg.buffer_size = BSP_LCD_H_RES * BSP_LCD_V_RES / 2;
+    disp_cfg.double_buffer = 0;
+    disp_cfg.hres = BSP_LCD_H_RES;
+    disp_cfg.vres = BSP_LCD_V_RES;
+    disp_cfg.monochrome = false;
+    /* Rotation values must be same as used in esp_lcd for initial settings of the screen */
+    disp_cfg.rotation.swap_xy = false;
+    disp_cfg.rotation.mirror_x = mirror_x;
+    disp_cfg.rotation.mirror_y = mirror_y;
+    disp_cfg.flags.buff_dma = true;
+    disp_cfg.flags.buff_spiram = false;
 #if LVGL_VERSION_MAJOR >= 9
-            .swap_bytes = false,
+    disp_cfg.flags.swap_bytes = false;
 #endif
-        }};
     m_disp = lvgl_port_add_disp(&disp_cfg);
     ESP_ERROR_CHECK(bsp_display_backlight_on());
 }
@@ -73,7 +68,11 @@ void WhoLCD::init(const lvgl_port_cfg_t &lvgl_port_cfg)
 #endif
                                      .dsi_bus =
                                          {
-                                             .phy_clk_src = MIPI_DSI_PHY_CLK_SRC_DEFAULT,
+#if CONFIG_ESP32P4_SELECTS_REV_LESS_V3
+                                             .phy_clk_src = MIPI_DSI_PHY_PLLREF_CLK_SRC_DEFAULT_LEGACY,
+#else
+                                             .phy_clk_src = MIPI_DSI_PHY_PLLREF_CLK_SRC_DEFAULT,
+#endif
                                              .lane_bit_rate_mbps = BSP_LCD_MIPI_DSI_LANE_BITRATE_MBPS,
                                          }},
                              .flags = {

@@ -39,7 +39,7 @@ Display images via Http
 
 ## 0.5.0
 Initial commit, esp-who appear in the world.
-- Elementry functions such as image processing and matrix computing
+- Elementary functions such as image processing and matrix computing
 - Face detection
 - Face recognition
 - Components such as camera

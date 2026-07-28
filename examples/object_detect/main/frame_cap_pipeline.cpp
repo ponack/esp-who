@@ -1,7 +1,8 @@
 #include "frame_cap_pipeline.hpp"
-#include "who_cam.hpp"
+#include "esp_video_init.h"
+#include "video_capture.hpp"
+#include "bsp/esp-bsp.h"
 
-using namespace who::cam;
 using namespace who::frame_cap;
 
 #if defined(CONFIG_HUMAN_FACE_DETECT_MODEL_LOCATION)
@@ -43,103 +44,100 @@ using namespace who::frame_cap;
 // The size of the fb_count and ringbuf_len must be big enough. If you have no idea how to set them, try with 5 and
 // larger.
 #if CONFIG_IDF_TARGET_ESP32S3
-WhoFrameCap *get_lcd_dvp_frame_cap_pipeline()
+WhoFrameCap *get_dvp_frame_cap_pipeline(bool lcd)
 {
+    bsp_camera_cfg_t cam_cfg{};
+    ESP_ERROR_CHECK(bsp_camera_start(&cam_cfg));
     // The ringbuf_len of FetchNode equals cam_fb_count - 2. The WhoFetchNode fb will display on lcd, if you want to
     // make sure the displayed detection result is synced with the frame, the ringbuf size must be big enough to
     // cover the process time from now to the the detection result is ready. If the ring_buf_len is 3, the frame
     // which the disp task will display is 2 frames before than the frame which feeds into detection task. So the
     // detection task must finish within 2 frames, or the detect result will have a delay compared to the displayed
     // frame.
-    framesize_t frame_size = get_cam_frame_size_from_lcd_resolution();
-#ifdef BSP_BOARD_ESP32_S3_KORVO_2
-    auto cam = new WhoS3Cam(PIXFORMAT_RGB565, frame_size, MODEL_TIME + 3, true, true);
-#else
-    auto cam = new WhoS3Cam(PIXFORMAT_RGB565, frame_size, MODEL_TIME + 3);
+
+    auto cap = new VideoCapture();
+    auto buffer_cnt = lcd ? (MODEL_TIME + 3) : (MODEL_TIME + 2);
+    auto cfg = VideoCapture::Config(ESP_VIDEO_DVP_DEVICE_NAME, V4L2_PIX_FMT_RGB565X, buffer_cnt);
+
+#ifdef BSP_BOARD_ESP32_S3_EYE
+    cfg.set_vflip(true);
+#elifdef BSP_BOARD_ESP32_S3_KORVO_2
+    cfg.set_hflip(true).set_vflip(true);
 #endif
+    cap->init(cfg);
+    cap->start();
+
     auto frame_cap = new WhoFrameCap();
-    frame_cap->add_node<WhoFetchNode>("FrameCapFetch", cam);
+    frame_cap->add_node<WhoFetchNode>("FrameCapFetch", cap);
     return frame_cap;
 }
 
-WhoFrameCap *get_term_dvp_frame_cap_pipeline()
-{
-    // Don't need lcd display, cam_fb_count can decrease 1.
-    framesize_t frame_size = get_cam_frame_size_from_lcd_resolution();
-#ifdef BSP_BOARD_ESP32_S3_KORVO_2
-    auto cam = new WhoS3Cam(PIXFORMAT_RGB565, frame_size, MODEL_TIME + 2, true, true);
-#else
-    auto cam = new WhoS3Cam(PIXFORMAT_RGB565, frame_size, MODEL_TIME + 2);
-#endif
-    auto frame_cap = new WhoFrameCap();
-    frame_cap->add_node<WhoFetchNode>("FrameCapFetch", cam);
-    return frame_cap;
-}
 #elif CONFIG_IDF_TARGET_ESP32P4
-WhoFrameCap *get_lcd_mipi_csi_frame_cap_pipeline()
+WhoFrameCap *get_mipi_csi_frame_cap_pipeline(bool lcd)
 {
-    auto cam = new WhoP4Cam(V4L2_PIX_FMT_RGB565, MODEL_TIME + 3);
+    esp_log_level_set("ISP_AWB", ESP_LOG_ERROR);
+    bsp_camera_cfg_t cam_cfg{};
+    ESP_ERROR_CHECK(bsp_camera_start(&cam_cfg));
+
+    auto cap = new VideoCapture();
+    auto buffer_cnt = lcd ? (MODEL_TIME + 3) : (MODEL_TIME + 2);
+    auto cfg = VideoCapture::Config(ESP_VIDEO_MIPI_CSI_DEVICE_NAME, V4L2_PIX_FMT_RGB565, buffer_cnt).set_hflip(true);
+    cap->init(cfg);
+    cap->start();
+
     auto frame_cap = new WhoFrameCap();
-    frame_cap->add_node<WhoFetchNode>("FrameCapFetch", cam);
+    frame_cap->add_node<WhoFetchNode>("FrameCapFetch", cap);
     return frame_cap;
 }
 
-WhoFrameCap *get_lcd_mipi_csi_ppa_frame_cap_pipeline(WhoFrameCapNode **lcd_disp_frame_cap_node)
+#if CONFIG_ESP_VIDEO_ENABLE_USB_UVC_VIDEO_DEVICE
+WhoFrameCap *get_uvc_frame_cap_pipeline(bool lcd)
 {
-    // Use ppa to resize the frame into model input shape to avoid doing this in the model inference which can reduce
-    // cpu load. Compared to the one without ppa, the cam_fb_count must increase, because the process time since
-    // WhoFetchNode equals ppa + detect, while without ppa, the process time equals detect.
-    auto cam = new WhoP4Cam(V4L2_PIX_FMT_RGB565, MODEL_TIME + 4);
-    auto frame_cap = new WhoFrameCap();
-    frame_cap->add_node<WhoFetchNode>("FrameCapFetch", cam);
-    frame_cap->add_node<WhoPPAResizeNode>(
-        "FrameCapPPAResize", MODEL_INPUT_W, MODEL_INPUT_H, dl::image::DL_IMAGE_PIX_TYPE_RGB565, MODEL_TIME);
-    *lcd_disp_frame_cap_node = frame_cap->get_node("FrameCapFetch");
-    return frame_cap;
-}
+    esp_video_init_usb_uvc_config_t usb_uvc_cfg = {
+        .uvc =
+            {
+                .uvc_dev_num = 1,
+                .task_stack = 4096,
+                .task_priority = 10,
+                .task_affinity = -1,
+            },
+        .usb =
+            {
+                .init_usb_host_lib = true,
+                .peripheral_map = 0x00,
+                .task_stack = 4096,
+                .task_priority = 11,
+                .task_affinity = -1,
+            },
+    };
+    esp_video_init_config_t video_cfg = {};
+    video_cfg.usb_uvc = &usb_uvc_cfg;
+    esp_video_init(&video_cfg);
 
-WhoFrameCap *get_lcd_uvc_frame_cap_pipeline()
-{
-    auto cam = new WhoUVCCam(UVC_VS_FORMAT_MJPEG, 640, 480, 30, 4);
+    auto cap = new VideoCapture();
+    auto cfg = VideoCapture::Config(ESP_VIDEO_USB_UVC_NAME(0), V4L2_PIX_FMT_JPEG, 4).set_uvc_config({640, 480, 30});
+    cap->init(cfg);
+    cap->start();
+
     auto frame_cap = new WhoFrameCap();
     // The ringbuf_len of FetchNode equals cam_fb_count - 2, the ringbuf_len of FetchNode should take care of the
     // process time of the following Node. For example, if the DecodeNode takes 2 frame to decode, then the
     // FetchNode ringbuf_len is at least 2, and the fb_count of the cam is at least 4.
-    frame_cap->add_node<WhoFetchNode>("FrameCapFetch", cam, false);
-    // The DecodeNode ringbuf_len relies on the following PPAResizeNode process time, the time of data transfer.
-    frame_cap->add_node<WhoDecodeNode>("FrameCapDecode", dl::image::DL_IMAGE_PIX_TYPE_RGB565, 2, false);
-    // The ppa resized fb will display on lcd, if you want to make sure the displayed detection result is synced with
-    // the frame, the ringbuf size must be big enough to cover the process time from now to the the detection result is
-    // ready.
-    frame_cap->add_node<WhoPPAResizeNode>(
-        "FrameCapPPAResize", 800, 600, dl::image::DL_IMAGE_PIX_TYPE_RGB565, MODEL_TIME + 1);
-    return frame_cap;
-}
+    frame_cap->add_node<WhoFetchNode>("FrameCapFetch", cap, false);
 
-WhoFrameCap *get_term_mipi_csi_frame_cap_pipeline()
-{
-    auto cam = new WhoP4Cam(V4L2_PIX_FMT_RGB565, MODEL_TIME + 2);
-    auto frame_cap = new WhoFrameCap();
-    frame_cap->add_node<WhoFetchNode>("FrameCapFetch", cam);
-    return frame_cap;
+    if (lcd) {
+        // The DecodeNode ringbuf_len relies on the following PPAResizeNode process time, the time of data transfer.
+        frame_cap->add_node<WhoDecodeNode>("FrameCapDecode", dl::image::DL_IMAGE_PIX_TYPE_RGB565LE, 2, false);
+        // The ppa resized fb will display on lcd, if you want to make sure the displayed detection result is synced
+        // with the frame, the ringbuf size must be big enough to cover the process time from now to the the detection
+        // result is ready.
+        frame_cap->add_node<WhoPPAResizeNode>(
+            "FrameCapPPAResize", 800, 600, dl::image::DL_IMAGE_PIX_TYPE_RGB565LE, MODEL_TIME + 1);
+        return frame_cap;
+    } else {
+        frame_cap->add_node<WhoDecodeNode>("FrameCapDecode", dl::image::DL_IMAGE_PIX_TYPE_RGB565LE, MODEL_TIME);
+        return frame_cap;
+    }
 }
-
-WhoFrameCap *get_term_mipi_csi_ppa_frame_cap_pipeline()
-{
-    auto cam = new WhoP4Cam(V4L2_PIX_FMT_RGB565, MODEL_TIME + 3);
-    auto frame_cap = new WhoFrameCap();
-    frame_cap->add_node<WhoFetchNode>("FrameCapFetch", cam);
-    frame_cap->add_node<WhoPPAResizeNode>(
-        "FrameCapPPAResize", MODEL_INPUT_W, MODEL_INPUT_H, dl::image::DL_IMAGE_PIX_TYPE_RGB565, MODEL_TIME);
-    return frame_cap;
-}
-
-WhoFrameCap *get_term_uvc_frame_cap_pipeline()
-{
-    auto cam = new WhoUVCCam(UVC_VS_FORMAT_MJPEG, 640, 480, 30, 4);
-    auto frame_cap = new WhoFrameCap();
-    frame_cap->add_node<WhoFetchNode>("FrameCapFetch", cam, false);
-    frame_cap->add_node<WhoDecodeNode>("FrameCapDecode", dl::image::DL_IMAGE_PIX_TYPE_RGB565, MODEL_TIME);
-    return frame_cap;
-}
+#endif
 #endif

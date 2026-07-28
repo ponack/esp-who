@@ -6,8 +6,8 @@ LV_FONT_DECLARE(montserrat_bold_26);
 
 namespace who {
 namespace app {
-WhoQRCodeAppLCD::WhoQRCodeAppLCD(frame_cap::WhoFrameCap *frame_cap) :
-    WhoQRCodeAppTerm(frame_cap), m_lcd_disp(new lcd_disp::WhoFrameLCDDisp("LCDDisp", frame_cap->get_last_node()))
+WhoQRCodeAppLCD::WhoQRCodeAppLCD(frame_cap::WhoFrameCap *frame_cap, int w, int h) :
+    WhoQRCodeAppTerm(frame_cap, w, h), m_lcd_disp(new lcd_disp::WhoFrameLCDDisp("LCDDisp", frame_cap->get_last_node()))
 {
     WhoApp::add_task(m_lcd_disp);
     m_lcd_disp->set_lcd_disp_cb(std::bind(&WhoQRCodeAppLCD::lcd_disp_cb, this, std::placeholders::_1));
@@ -55,7 +55,7 @@ void WhoQRCodeAppLCD::qrcode_result_cb(const std::string &result)
     m_result_lcd_disp->save_text_result(result);
 }
 
-void WhoQRCodeAppLCD::lcd_disp_cb(who::cam::cam_fb_t *fb)
+void WhoQRCodeAppLCD::lcd_disp_cb(VideoCapture::Frame *fb)
 {
     m_result_lcd_disp->lcd_disp_cb(fb);
 }

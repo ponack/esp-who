@@ -4,19 +4,11 @@
 
 namespace who {
 namespace qrcode {
-WhoQRCode::WhoQRCode(const std::string &name, frame_cap::WhoFrameCapNode *frame_cap_node) :
+WhoQRCode::WhoQRCode(const std::string &name, frame_cap::WhoFrameCapNode *frame_cap_node, int w, int h) :
     task::WhoTask(name), m_frame_cap_node(frame_cap_node), m_qr(quirc_new())
 {
     frame_cap_node->add_new_frame_signal_subscriber(this);
-#if CONFIG_IDF_TARGET_ESP32S3
-    uint16_t w = BSP_LCD_H_RES, h = BSP_LCD_V_RES;
-    uint32_t caps = dl::image::DL_IMAGE_CAP_RGB565_BIG_ENDIAN;
-#elif CONFIG_IDF_TARGET_ESP32P4
-    uint16_t w = BSP_LCD_H_RES / 2, h = BSP_LCD_V_RES / 2;
-    uint32_t caps = 0;
-#endif
     quirc_resize(m_qr, w, h);
-    m_image_transformer.set_caps(caps);
 }
 
 WhoQRCode::~WhoQRCode()
@@ -46,7 +38,7 @@ void WhoQRCode::task()
         uint8_t *data = quirc_begin(m_qr, &w, &h);
         dl::image::img_t dst_img = {
             .data = data, .width = (uint16_t)w, .height = (uint16_t)h, .pix_type = dl::image::DL_IMAGE_PIX_TYPE_GRAY};
-        m_image_transformer.set_src_img(*fb).set_dst_img(dst_img).transform();
+        m_image_transformer.set_src_img(frame2img(fb)).set_dst_img(dst_img).transform();
         quirc_end(m_qr);
         int num_codes = quirc_count(m_qr);
         for (int i = 0; i < num_codes; i++) {

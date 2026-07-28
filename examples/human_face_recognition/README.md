@@ -6,7 +6,7 @@
 
 Physical buttons
 
-| btn  | opertion         |
+| btn  | operation         |
 |------|------------------|
 | play | recognize        |
 | up   | enroll           |
@@ -16,7 +16,7 @@ Physical buttons
 
 Physical buttons
 
-| btn  | opertion         |
+| btn  | operation         |
 |------|------------------|
 | play | recognize        |
 | vol+ | enroll           |
@@ -26,7 +26,7 @@ Physical buttons
 
 Touch screen buttons
 
-| btn       | opertion         |
+| btn       | operation         |
 |-----------|------------------|
 | recognize | recognize        |
 | enroll    | enroll           |

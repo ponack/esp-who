@@ -3,7 +3,7 @@
 
 namespace who {
 namespace app {
-WhoQRCodeAppTerm::WhoQRCodeAppTerm(frame_cap::WhoFrameCap *frame_cap) : WhoQRCodeAppBase(frame_cap)
+WhoQRCodeAppTerm::WhoQRCodeAppTerm(frame_cap::WhoFrameCap *frame_cap, int w, int h) : WhoQRCodeAppBase(frame_cap, w, h)
 {
     m_qrcode->set_qrcode_result_cb(std::bind(&WhoQRCodeAppTerm::qrcode_result_cb, this, std::placeholders::_1));
 }

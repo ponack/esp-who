@@ -38,6 +38,12 @@ def action_extensions(base_actions, project_path=os.getcwd()):
     }
     BSP2IDF_TARGET.update({k + "_noglib": v for k, v in BSP2IDF_TARGET.items()})
 
+    # Namespace-qualified component name to write into idf_component.yml for
+    # specific BSPs. Falls back to the bare BSP name for the others.
+    BSP2COMPONENT = {
+        "esp32_s3_korvo_2_noglib": "100312dog/esp32_s3_korvo_2_noglib",
+    }
+
     # List of supported DETECT_MODELS
     DETECT_MODELS = {
         "human_face_detect",
@@ -164,7 +170,8 @@ def action_extensions(base_actions, project_path=os.getcwd()):
         if manifest is None:
             manifest = {}
 
-        edit_manifest_component(manifest, BSPS, action_args["bsp"])
+        bsp = action_args["bsp"]
+        edit_manifest_component(manifest, BSPS, BSP2COMPONENT.get(bsp, bsp))
         edit_manifest_component(manifest, DETECT_MODELS, action_args["detect_model"])
         yaml.dump(manifest, manifest_path)
 
