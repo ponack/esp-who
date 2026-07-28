@@ -1,4 +1,48 @@
 dependencies:
+  100312dog/esp32_s3_korvo_2_noglib:
+    component_hash: 6c91f55dab7557748bffe9bc8655ecbc8b94d5a80b14a0471356c883f12f967f
+    dependencies:
+    - name: espressif/button
+      registry_url: https://components.espressif.com
+      require: public
+      version: ^4
+    - name: espressif/esp_codec_dev
+      registry_url: https://components.espressif.com
+      require: public
+      version: ~1.5
+    - name: espressif/esp_video
+      registry_url: https://components.espressif.com
+      require: public
+      version: ~2.0
+    - name: espressif/esp_io_expander_tca9554
+      registry_url: https://components.espressif.com
+      require: public
+      version: '*'
+    - name: espressif/esp_lcd_ili9341
+      registry_url: https://components.espressif.com
+      require: private
+      version: '*'
+    - name: espressif/esp_lcd_touch_gt911
+      registry_url: https://components.espressif.com
+      require: private
+      version: '*'
+    - name: espressif/esp_lcd_touch_tt21100
+      registry_url: https://components.espressif.com
+      require: private
+      version: '*'
+    - name: idf
+      require: private
+      version: '>=5.4'
+    - name: espressif/led_indicator
+      registry_url: https://components.espressif.com
+      require: public
+      version: ^2
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    targets:
+    - esp32s3
+    version: 5.0.1
   esp_video_cxx:
     dependencies:
     - name: espressif/esp_video
@@ -70,50 +114,6 @@ dependencies:
     - esp32s3
     - esp32s31
     version: 3.3.8
-  espressif/esp32_s3_korvo_2_noglib:
-    component_hash: d4f746220732ab68fb157d45e60a838299f95267d16944ac93226f793d6a0d33
-    dependencies:
-    - name: espressif/button
-      registry_url: https://components.espressif.com
-      require: public
-      version: ^4
-    - name: espressif/esp_codec_dev
-      registry_url: https://components.espressif.com
-      require: public
-      version: ~1.5
-    - name: espressif/esp_video
-      registry_url: https://components.espressif.com
-      require: public
-      version: ~2.0
-    - name: espressif/esp_io_expander_tca9554
-      registry_url: https://components.espressif.com
-      require: public
-      version: '*'
-    - name: espressif/esp_lcd_ili9341
-      registry_url: https://components.espressif.com
-      require: private
-      version: '*'
-    - name: espressif/esp_lcd_touch_gt911
-      registry_url: https://components.espressif.com
-      require: private
-      version: '*'
-    - name: espressif/esp_lcd_touch_tt21100
-      registry_url: https://components.espressif.com
-      require: private
-      version: '*'
-    - name: idf
-      require: private
-      version: '>=5.4'
-    - name: espressif/led_indicator
-      registry_url: https://components.espressif.com
-      require: public
-      version: ^2
-    source:
-      registry_url: https://components.espressif.com/
-      type: service
-    targets:
-    - esp32s3
-    version: 5.0.0
   espressif/esp_cam_sensor:
     component_hash: 902c305b77f7c42b60fff5a084e397694f8a3fd6e6b72299996a7c856666e983
     dependencies:
@@ -414,9 +414,9 @@ dependencies:
       type: local
     version: '*'
 direct_dependencies:
+- 100312dog/esp32_s3_korvo_2_noglib
 - esp_video_cxx
 - espressif/esp-dl
-- espressif/esp32_s3_korvo_2_noglib
 - espressif/esp_video
 - espressif/human_face_detect
 - who_detect
@@ -424,6 +424,6 @@ direct_dependencies:
 - who_frame_lcd_disp
 - who_lcd
 - who_task
-manifest_hash: 37bd98231971941ace411907d886e9f13a63700f915c0b557deadeff408a9376
+manifest_hash: e4fde07d37271cd5d12ee67953bb6ed2fad8f773bc731d9a62a486e80a2659df
 target: esp32s3
 version: 2.0.0
