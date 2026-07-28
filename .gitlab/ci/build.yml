@@ -5,6 +5,9 @@
   variables:
     # Enable ccache for all build jobs. See configure_ci_environment.sh for more ccache related settings.
     IDF_CCACHE_ENABLE: "1"
+    # Limit ninja parallel compile jobs. esp-dl template-heavy TUs at -O3 can each
+    # consume ~1-2 GB RAM; compiling several concurrently OOM-kills cc1plus.
+    IDF_PY_BUILD_JOBS: "2"
     BATCH_BUILD: "1"
     V: "0"
     WARNING_STR: ""
