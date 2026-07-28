@@ -18,9 +18,9 @@ Some chip such as esp32 and esp32-s2, and examples such as cat face detection, c
 
 ## Supported ESP-IDF version
 
-| ESP-IDF <br> [Release/v5.4](https://github.com/espressif/esp-idf/tree/release/v5.4) | ESP-IDF <br> [Release/v5.5](https://github.com/espressif/esp-idf/tree/release/v5.5) |
-|-------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
-| :heavy_check_mark:                                                                  | :heavy_check_mark:                                                                  |
+| ESP-IDF <br> [Release/v5.4](https://github.com/espressif/esp-idf/tree/release/v5.4) | ESP-IDF <br> [Release/v5.5](https://github.com/espressif/esp-idf/tree/release/v5.5) | ESP-IDF <br> [Release/v6.0](https://github.com/espressif/esp-idf/tree/release/v6.0) | ESP-IDF <br> [Release/v6.1](https://github.com/espressif/esp-idf/tree/release/v6.1) |
+|-------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------|
+| :heavy_check_mark:                                                                  | :heavy_check_mark:                                                                  | :heavy_check_mark:                                                                  | :heavy_check_mark:                                                                  |
 
 ## Supported develop board
 
