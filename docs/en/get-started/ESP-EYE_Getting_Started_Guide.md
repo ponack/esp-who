@@ -82,4 +82,6 @@ The list and figure below describe the key components, interfaces and functions 
 
 	A reserved port for data transmission.
 
+## Disclaimer and Copyright Notice
 
+See [Disclaimer and Copyright Notice](../disclaimer-and-copyright.md).
