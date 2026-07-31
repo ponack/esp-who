@@ -68,3 +68,14 @@ build_example_qrcode_recognition:
         SDKCONFIG_DEFAULTS: [sdkconfig.bsp.esp32_p4_function_ev_board, sdkconfig.bsp.esp32_s3_eye]
   variables:
     EXAMPLE_DIR: examples/qrcode_recognition
+
+build_example_pp_ocr_v6:
+  extends:
+    - .build_template
+    - .rules:build:example_pp_ocr_v6
+  parallel:
+    matrix:
+      - IMAGE: [espressif/idf:release-v5.4, espressif/idf:release-v5.5, espressif/idf:release-v6.0, espressif/idf:release-v6.1]
+        SDKCONFIG_DEFAULTS: [sdkconfig.bsp.esp32_p4_function_ev_board]
+  variables:
+    EXAMPLE_DIR: examples/pp_ocr_v6

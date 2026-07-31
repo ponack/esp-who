@@ -1,0 +1,17 @@
+menu "PP-OCRv6 example"
+
+    config PP_OCR_V6_EXAMPLE_HAVE_CJK_FONT
+        bool "Include CJK LVGL font for the on-screen overlay"
+        default n
+        help
+            Use `pp_ocr_v6_cjk_24` (24 pt Noto Sans CJK SC subset) so
+            non-latin recognized text renders correctly on the LCD.
+            Generate the font first:
+
+                python3 tools/gen_cjk_font.py <path/to/CJK.ttc> --size 24 --bpp 2
+
+            Disabled: overlay falls back to `montserrat_bold_20`
+            (Latin only); non-latin glyphs show as placeholders but
+            everything else still works.
+
+endmenu

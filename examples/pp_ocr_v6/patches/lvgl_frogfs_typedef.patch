@@ -1,0 +1,15 @@
+--- a/managed_components/lvgl__lvgl/src/libs/frogfs/src/frogfs_format.h
++++ b/managed_components/lvgl__lvgl/src/libs/frogfs/src/frogfs_format.h
+@@ -54,6 +54,12 @@
+     uint8_t seg_sz; /**< path segment size (before alignment) */
+     uint8_t opts; /**< compression opts */
+ };
++/* Upstream LVGL 9.5.0 bug: this typedef lives in ../include/frogfs/frogfs.h,
++   which frogfs_priv.h only includes AFTER this header — so the type name is
++   invisible in the frogfs_dir_t / frogfs_file_t / frogfs_comp_t members
++   below. Redeclare it here so those struct bodies compile. Safe to keep
++   even if upstream fixes the include order (identical typedef). */
++typedef struct frogfs_entry_t frogfs_entry_t;
+ 
+ /**
+  * \brief       Directory object header

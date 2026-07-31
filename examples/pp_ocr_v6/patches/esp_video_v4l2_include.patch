@@ -1,0 +1,21 @@
+--- a/managed_components/espressif__esp_video/private_include/esp_video_internal.h
++++ b/managed_components/espressif__esp_video/private_include/esp_video_internal.h
+@@ -6,6 +6,18 @@
+ 
+ #pragma once
+ 
++/* Upstream header hygiene fix: esp_video_internal.h uses `struct v4l2_format`
++   / `v4l2_ext_controls` / `v4l2_selection` / etc. in its function-pointer
++   declarations below, but never included the header that defines them.
++   As long as this file happens to be pulled in AFTER `linux/videodev2.h`
++   the build passes; but esp_video.h itself pulls `esp_video_internal.h`
++   BEFORE `linux/videodev2.h`, and GCC 14 then narrows the parameter-list
++   `struct v4l2_format` forward-decl to a distinct incompatible type
++   ("declared inside parameter list will not be visible outside…"),
++   which breaks every downstream esp_video_ops assignment. Include the
++   V4L2 header first so all types have file-scope visibility. */
++#include "linux/videodev2.h"
++
+ #include "esp_err.h"
+ #include "esp_cam_sensor.h"
+ #include "esp_cam_motor.h"
