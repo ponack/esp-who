@@ -1,0 +1,58 @@
+--- a/managed_components/espressif__pp_ocr_v6/pp_ocr_v6.cpp
++++ b/managed_components/espressif__pp_ocr_v6/pp_ocr_v6.cpp
+@@ -27,12 +27,25 @@
+ Det::Det(const char *model_name) :
+     m_model(nullptr), m_image_preprocessor(nullptr), m_postprocessor(nullptr), m_letterbox_img({}), m_resize_scale(1.0f)
+ {
++    // Explicit param_copy=false — keep model params in flash instead of
++    // copying to PSRAM (upstream default is true; overriding here saves
++    // ~3 MB PSRAM when SPIRAM_XIP_FROM_PSRAM is also off).
+ #if CONFIG_PP_OCR_V6_MODEL_IN_SDCARD
+     auto sd_path = std::filesystem::path(CONFIG_BSP_SD_MOUNT_POINT) / CONFIG_PP_OCR_V6_MODEL_SDCARD_DIR / model_name;
+-    m_model = new dl::Model(sd_path.c_str(), fbs::MODEL_LOCATION_IN_SDCARD);
++    m_model = new dl::Model(sd_path.c_str(),
++                            fbs::MODEL_LOCATION_IN_SDCARD,
++                            /*max_internal_size*/ 0,
++                            dl::MEMORY_MANAGER_GREEDY,
++                            /*key*/ nullptr,
++                            /*param_copy*/ false);
+ #else
+-    m_model =
+-        new dl::Model(model_path, model_name, static_cast<fbs::model_location_type_t>(CONFIG_PP_OCR_V6_MODEL_LOCATION));
++    m_model = new dl::Model(model_path,
++                            model_name,
++                            static_cast<fbs::model_location_type_t>(CONFIG_PP_OCR_V6_MODEL_LOCATION),
++                            /*max_internal_size*/ 0,
++                            dl::MEMORY_MANAGER_GREEDY,
++                            /*key*/ nullptr,
++                            /*param_copy*/ false);
+ #endif
+     m_model->minimize();
+     m_image_preprocessor =
+@@ -92,12 +105,23 @@
+ 
+ Rec::Rec(const char *model_name) : m_model(nullptr), m_image_preprocessor(nullptr), m_postprocessor(nullptr)
+ {
++    // Explicit param_copy=false — see comment in Det::Det.
+ #if CONFIG_PP_OCR_V6_MODEL_IN_SDCARD
+     auto sd_path = std::filesystem::path(CONFIG_BSP_SD_MOUNT_POINT) / CONFIG_PP_OCR_V6_MODEL_SDCARD_DIR / model_name;
+-    m_model = new dl::Model(sd_path.c_str(), fbs::MODEL_LOCATION_IN_SDCARD);
++    m_model = new dl::Model(sd_path.c_str(),
++                            fbs::MODEL_LOCATION_IN_SDCARD,
++                            /*max_internal_size*/ 0,
++                            dl::MEMORY_MANAGER_GREEDY,
++                            /*key*/ nullptr,
++                            /*param_copy*/ false);
+ #else
+-    m_model =
+-        new dl::Model(model_path, model_name, static_cast<fbs::model_location_type_t>(CONFIG_PP_OCR_V6_MODEL_LOCATION));
++    m_model = new dl::Model(model_path,
++                            model_name,
++                            static_cast<fbs::model_location_type_t>(CONFIG_PP_OCR_V6_MODEL_LOCATION),
++                            /*max_internal_size*/ 0,
++                            dl::MEMORY_MANAGER_GREEDY,
++                            /*key*/ nullptr,
++                            /*param_copy*/ false);
+ #endif
+     m_model->minimize();
+     m_image_preprocessor =

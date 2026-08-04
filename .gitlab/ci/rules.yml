@@ -12,6 +12,9 @@
 .patterns-components_who_qrcode_app: &patterns-components_who_qrcode_app
   - "components/who_app/who_qrcode_app/**/*"
 
+.patterns-components_who_pp_ocr_v6_app: &patterns-components_who_pp_ocr_v6_app
+  - "components/who_app/who_pp_ocr_v6_app/**/*"
+
 .patterns-components_who_recognition_app: &patterns-components_who_recognition_app
   - "components/who_app/who_recognition_app/**/*"
   
@@ -39,6 +42,9 @@
 .patterns-components_who_qrcode: &patterns-components_who_qrcode
   - "components/who_qrcode/**/*"
 
+.patterns-components_who_pp_ocr_v6: &patterns-components_who_pp_ocr_v6
+  - "components/who_pp_ocr_v6/**/*"
+
 .patterns-components_who_recognition: &patterns-components_who_recognition
   - "components/who_recognition/**/*"
 
@@ -54,6 +60,9 @@
 
 .patterns-example_qrcode_recognition: &patterns-example_qrcode_recognition
   - "examples/qrcode_recognition/**/*"
+
+.patterns-example_pp_ocr_v6: &patterns-example_pp_ocr_v6
+  - "examples/pp_ocr_v6/**/*"
 
 ##############
 # if anchors #
@@ -151,6 +160,31 @@
       changes: *patterns-components_who_usb
     - <<: *if-dev-push
       changes: *patterns-components_who_qrcode
+    - <<: *if-dev-push
+      changes: *patterns-components_who_task
+    - <<: *if-dev-push
+      changes: *patterns-gitlab-ci
+
+.rules:build:example_pp_ocr_v6:
+  rules:
+    - <<: *if-protected
+    - <<: *if-label-build
+    - <<: *if-dev-push
+      changes: *patterns-example_pp_ocr_v6
+    - <<: *if-dev-push
+      changes: *patterns-components_who_pp_ocr_v6_app
+    - <<: *if-dev-push
+      changes: *patterns-components_who_frame_cap
+    - <<: *if-dev-push
+      changes: *patterns-components_who_frame_lcd_disp
+    - <<: *if-dev-push
+      changes: *patterns-components_who_cam
+    - <<: *if-dev-push
+      changes: *patterns-components_who_lcd
+    - <<: *if-dev-push
+      changes: *patterns-components_who_usb
+    - <<: *if-dev-push
+      changes: *patterns-components_who_pp_ocr_v6
     - <<: *if-dev-push
       changes: *patterns-components_who_task
     - <<: *if-dev-push

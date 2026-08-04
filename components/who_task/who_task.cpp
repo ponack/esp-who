@@ -1,7 +1,11 @@
 #include "who_task.hpp"
+#include "esp_heap_caps.h"
 #include "who_yield2idle.hpp"
 #include <algorithm>
 #include <esp_log.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/idf_additions.h"
+#include "freertos/task.h"
 
 static const char *TAG = "WhoTask";
 
@@ -12,14 +16,44 @@ bool WhoTaskBase::run(const configSTACK_DEPTH_TYPE uxStackDepth, UBaseType_t uxP
     xSemaphoreTake(m_mutex, portMAX_DELAY);
     EventBits_t event_bits = xEventGroupGetBits(m_event_group);
     if (event_bits & TASK_STOPPED) {
-        if (xTaskCreatePinnedToCore(task, m_name.c_str(), uxStackDepth, this, uxPriority, &m_task_handle, xCoreID) ==
-            pdPASS) {
+        BaseType_t ret =
+            xTaskCreatePinnedToCore(task, m_name.c_str(), uxStackDepth, this, uxPriority, &m_task_handle, xCoreID);
+
+#if CONFIG_FREERTOS_TASK_CREATE_ALLOW_EXT_MEM && CONFIG_SPIRAM_ALLOW_STACK_EXTERNAL_MEMORY
+        // Fall back to a PSRAM-backed stack when internal DRAM is fragmented.
+        if (ret != pdPASS) {
+            ESP_LOGW(TAG,
+                     "Task %s: DRAM stack alloc failed (need %u B), retrying in PSRAM.",
+                     m_name.c_str(),
+                     (unsigned)uxStackDepth);
+            ret = xTaskCreatePinnedToCoreWithCaps(task,
+                                                  m_name.c_str(),
+                                                  uxStackDepth,
+                                                  this,
+                                                  uxPriority,
+                                                  &m_task_handle,
+                                                  xCoreID,
+                                                  MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+        }
+#endif
+
+        if (ret == pdPASS) {
             xEventGroupClearBits(m_event_group, TASK_STOPPED);
             xSemaphoreGive(m_mutex);
             return true;
-        } else {
-            ESP_LOGE(TAG, "Failed to create task %s.\n", m_name.c_str());
         }
+
+        ESP_LOGE(TAG, "Failed to create task %s (stack=%u B).", m_name.c_str(), (unsigned)uxStackDepth);
+        ESP_LOGE(TAG,
+                 "  DRAM(INTERNAL|8BIT):  free=%u  largest=%u  min=%u",
+                 (unsigned)heap_caps_get_free_size(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT),
+                 (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT),
+                 (unsigned)heap_caps_get_minimum_free_size(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT));
+        ESP_LOGE(TAG,
+                 "  PSRAM(SPIRAM):        free=%u  largest=%u  min=%u",
+                 (unsigned)heap_caps_get_free_size(MALLOC_CAP_SPIRAM),
+                 (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_SPIRAM),
+                 (unsigned)heap_caps_get_minimum_free_size(MALLOC_CAP_SPIRAM));
     }
     xSemaphoreGive(m_mutex);
     return false;

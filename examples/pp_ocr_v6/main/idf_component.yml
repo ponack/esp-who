@@ -1,0 +1,19 @@
+## IDF Component Manager Manifest File
+##
+## `espressif/pp_ocr_v6` (the model component) is now published to the
+## Espressif Component Registry, and it declares `espressif/esp-dl: '*'` as
+## its own dependency — so we no longer need any `override_path`. The
+## registry version is pulled transitively via `who_pp_ocr_v6`'s
+## dependency (see components/who_pp_ocr_v6/idf_component.yml).
+##
+## The only entry this file keeps is the BSP pin: the new esp-who frame-cap
+## pipeline uses `bsp_camera_cfg_t` / `bsp_camera_start`, which first
+## appeared in `esp32_p4_function_ev_board` 5.2. 5.0.3 (the version
+## `bsp_ext.py`'s default `version: '*'` used to resolve to on a fresh
+## cache) does not ship these symbols and the migrated example fails to
+## compile there. `bsp_ext.py` is patched in this tree to preserve an
+## explicit `version:` constraint, so the pin below survives every
+## `set-target` / `reconfigure`.
+dependencies:
+  esp32_p4_function_ev_board:
+    version: '>=5.2,<6'

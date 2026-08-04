@@ -52,7 +52,12 @@ def action_extensions(base_actions, project_path=os.getcwd()):
         "dog_detect",
     }
 
-    EXAMPLES = {"human_face_recognition", "object_detect", "qrcode_recognition"}
+    EXAMPLES = {
+        "human_face_recognition",
+        "object_detect",
+        "qrcode_recognition",
+        "pp_ocr_v6",
+    }
 
     def get_value_from_cache_or_env(key, global_args):
         regex = compile(rf"^{key}=.*")
@@ -76,6 +81,13 @@ def action_extensions(base_actions, project_path=os.getcwd()):
             if match(regex, entry):
                 return True
         return is_key_in_cache_file(key, global_args)
+
+    def is_key_in_defines(key, global_args):
+        regex = compile(rf"^{key}=.*")
+        for entry in global_args.define_cache_entry:
+            if match(regex, entry):
+                return True
+        return False
 
     def global_callback(ctx: Context, global_args: PropertyDict, tasks: List) -> None:
         bsp = None
@@ -112,7 +124,20 @@ def action_extensions(base_actions, project_path=os.getcwd()):
                     if BSP2IDF_TARGET[bsp] != idf_target:
                         red_print(f"BSP {bsp} does not match idf_target {idf_target}.")
                         sys.exit(2)
-                    if not is_key_in_cache("BSP", global_args):
+                    # `set-target` schedules an implicit `fullclean` (see
+                    # idf.py's dependency chain) which will delete
+                    # `CMakeCache.txt` before the cmake configure phase.
+                    # If we trust the pre-clean cache here, a subsequent
+                    # set-target after a successful build silently loses
+                    # `BSP=<...>` — cmake then aborts at the top-level
+                    # CMakeLists.txt with `BSP is not defined`. Only trust
+                    # the current invocation's -D flags in that case.
+                    bsp_probe = (
+                        is_key_in_defines
+                        if task.name == "set-target"
+                        else is_key_in_cache
+                    )
+                    if not bsp_probe("BSP", global_args):
                         global_args["define_cache_entry"].append(f"BSP={bsp}")
                     if example == "object_detect":
                         detect_model = get_value_from_cache_or_env(
@@ -128,7 +153,13 @@ def action_extensions(base_actions, project_path=os.getcwd()):
                                 f"Invalid detect_model: {detect_model}, supported list: {DETECT_MODELS}"
                             )
                             sys.exit(2)
-                        if not is_key_in_cache("DETECT_MODEL", global_args):
+                        # Same set-target/fullclean caveat as above.
+                        dm_probe = (
+                            is_key_in_defines
+                            if task.name == "set-target"
+                            else is_key_in_cache
+                        )
+                        if not dm_probe("DETECT_MODEL", global_args):
                             global_args["define_cache_entry"].append(
                                 f"DETECT_MODEL={detect_model}"
                             )
@@ -153,11 +184,25 @@ def action_extensions(base_actions, project_path=os.getcwd()):
             return
 
         if manifest:
+            # If the caller already pinned this BSP/detect-model to a
+            # specific version (e.g. `esp32_p4_function_ev_board: {version:
+            # '>=5.2,<6'}` in pp_ocr_v6/main/idf_component.yml, because that
+            # example relies on `bsp_camera_start` introduced in BSP 5.2),
+            # preserve that constraint. Only fall back to `'*'` when nothing
+            # was pinned. Sibling entries in `component_set` (i.e. *other*
+            # BSPs / detect models) are still stripped so that switching
+            # between BSPs stays clean.
+            keep_version = None
             for dep in list(manifest["dependencies"]):
                 if component_short_name(dep) in component_set:
+                    if component_short_name(dep) == component_short_name(component):
+                        entry = manifest["dependencies"][dep]
+                        if isinstance(entry, dict):
+                            keep_version = entry.get("version")
+                        elif isinstance(entry, str):
+                            keep_version = entry
                     del manifest["dependencies"][dep]
-            # Add the one we need
-            manifest["dependencies"][component] = {"version": "*"}
+            manifest["dependencies"][component] = {"version": keep_version or "*"}
         else:
             manifest["dependencies"] = {component: {"version": "*"}}
 
