@@ -29,17 +29,23 @@ BSP2TARGET.update({key + "_noglib": value for key, value in BSP2TARGET.items()})
 
 if __name__ == "__main__":
     example_dir = os.environ.get("EXAMPLE_DIR")
-    sdkconfig_defaults = os.environ.get("SDKCONFIG_DEFAULTS")
-    bsp = sdkconfig_defaults.split(".")[-1]
+    target = os.environ.get("TARGET")
+    find_kwargs = {
+        "build_dir": "build_@n_@v_@w",
+        "size_json_filename": "size.json",
+    }
+    if not target:
+        sdkconfig_defaults = os.environ.get("SDKCONFIG_DEFAULTS")
+        bsp = sdkconfig_defaults.split(".")[-1]
+        target = BSP2TARGET[bsp]
+        find_kwargs["config_rules"] = f"{sdkconfig_defaults}={bsp}"
 
     apps = find_apps(
         example_dir,
-        target=BSP2TARGET[bsp],
+        target=target,
         #  recursive=True,
-        build_dir=f"build_@n_@v_@w",
-        config_rules=f"{sdkconfig_defaults}={bsp}",
         # build_log_filename="build_log.txt",
-        size_json_filename="size.json",
+        **find_kwargs,
     )
     ret_code = build_apps(apps, copy_sdkconfig=True)
     sys.exit(ret_code)

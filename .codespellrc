@@ -1,4 +1,4 @@
 [codespell]
-skip = build,*.drawio,*.svg,*.pdf,*.bin
-ignore-words-list = laf,OT,parm
+skip = build,*.drawio,*.svg,*.pdf,*.bin,examples/object_tracking/components/bytetrack
+ignore-words-list = laf,OT,parm,STrack,strack
 write-changes = true

@@ -51,9 +51,15 @@
 .patterns-components_who_task: &patterns-components_who_task
   - "components/who_task/**/*"
 
+.patterns-components_mcpwm_cxx: &patterns-components_mcpwm_cxx
+  - "components/who_peripherals/mcpwm_cxx/**/*"
+
 # examples folder
 .patterns-example_object_detect: &patterns-example_object_detect
   - "examples/object_detect/**/*"
+
+.patterns-example_object_tracking: &patterns-example_object_tracking
+  - "examples/object_tracking/**/*"
 
 .patterns-example_human_face_recognition: &patterns-example_human_face_recognition
   - "examples/human_face_recognition/**/*"
@@ -160,6 +166,31 @@
       changes: *patterns-components_who_usb
     - <<: *if-dev-push
       changes: *patterns-components_who_qrcode
+    - <<: *if-dev-push
+      changes: *patterns-components_who_task
+    - <<: *if-dev-push
+      changes: *patterns-gitlab-ci
+
+.rules:build:example_object_tracking:
+  rules:
+    - <<: *if-protected
+    - <<: *if-label-build
+    - <<: *if-dev-push
+      changes: *patterns-example_object_tracking
+    - <<: *if-dev-push
+      changes: *patterns-components_who_detect_app
+    - <<: *if-dev-push
+      changes: *patterns-components_who_detect
+    - <<: *if-dev-push
+      changes: *patterns-components_who_frame_cap
+    - <<: *if-dev-push
+      changes: *patterns-components_who_frame_lcd_disp
+    - <<: *if-dev-push
+      changes: *patterns-components_who_cam
+    - <<: *if-dev-push
+      changes: *patterns-components_who_lcd
+    - <<: *if-dev-push
+      changes: *patterns-components_mcpwm_cxx
     - <<: *if-dev-push
       changes: *patterns-components_who_task
     - <<: *if-dev-push

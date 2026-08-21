@@ -15,7 +15,7 @@ WhoDetectAppLCD::WhoDetectAppLCD(const std::vector<std::vector<uint8_t>> &palett
     WhoApp::add_task(m_lcd_disp);
     m_lcd_disp->set_lcd_disp_cb(std::bind(&WhoDetectAppLCD::lcd_disp_cb, this, std::placeholders::_1));
 #if !BSP_CONFIG_NO_GRAPHIC_LIB
-    m_result_lcd_disp = new lcd_disp::WhoDetectResultLCDDisp(m_detect, palette, m_lcd_disp->get_canvas());
+    m_result_lcd_disp = new lcd_disp::WhoDetectResultLCDDisp(m_detect, m_lcd_disp->get_canvas(), palette);
 #else
     m_result_lcd_disp = new lcd_disp::WhoDetectResultLCDDisp(m_detect, palette);
 #endif

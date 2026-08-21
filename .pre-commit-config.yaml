@@ -37,6 +37,7 @@ repos:
           (?x)^(
             examples/pp_ocr_v6/main/assets/pp_ocr_v6_cjk_.*\.c
             | components/who_peripherals/who_lcd/who_lvgl_utils/montserrat_bold_.*\.c
+            | examples/object_tracking/components/bytetrack/.*
             | .*/managed_components/.*
             | .*/build/.*
           )$
