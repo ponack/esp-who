@@ -1,9 +1,9 @@
 #pragma once
 
-#include "esp_log.h"
 #include "esp_check.h"
-#include "driver/mcpwm_prelude.h"
+#include "esp_log.h"
 #include "driver/gpio.h"
+#include "driver/mcpwm_prelude.h"
 #include "freertos/FreeRTOS.h"
 
 class MCPWM {
@@ -16,8 +16,10 @@ public:
     esp_err_t stop_and_disable_timer();
     esp_err_t set_servo_angle(float angle);
     void get_timer(mcpwm_timer_handle_t *timer, int *group_id);
+
 protected:
     virtual uint32_t angle_to_cmpr_value(float angle);
+
 private:
     mcpwm_timer_handle_t m_timer;
     int m_group_id;

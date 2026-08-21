@@ -62,7 +62,7 @@ dependencies:
       require: private
       version: '*'
     source:
-      registry_url: https://components.espressif.com/
+      registry_url: https://components.espressif.com
       type: service
     targets:
     - esp32
@@ -223,7 +223,7 @@ dependencies:
       require: private
       version: '>=4.4.2'
     source:
-      registry_url: https://components.espressif.com
+      registry_url: https://components.espressif.com/
       type: service
     version: 1.2.1
   espressif/esp_lcd_touch_gt911:
@@ -302,7 +302,7 @@ dependencies:
       - if: target in [esp32p4, esp32s3]
       version: 2.4.*
     source:
-      registry_url: https://components.espressif.com/
+      registry_url: https://components.espressif.com
       type: service
     targets:
     - esp32p4
@@ -445,10 +445,11 @@ direct_dependencies:
 - bytetrack
 - espressif/eigen
 - espressif/esp32_p4_function_ev_board_noglib
+- espressif/esp_lcd_touch
 - espressif/human_face_detect
 - mcpwm_cxx
 - pid
 - who_detect_app
-manifest_hash: 2a6f41421a63789decc3166de89aeba018f2b724d9ecd3c77235eed337ace93e
+manifest_hash: d8cb203ce6383b063ef42f2d0de85ea8b9fa280acc16f7c2fb494460c40514da
 target: esp32p4
 version: 3.0.0

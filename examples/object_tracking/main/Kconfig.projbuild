@@ -1,4 +1,4 @@
-menu "Servo Configuration"
+menu "Object Tracking Configuration"
 
     menu "Pan Servo Configuration"
         config PAN_GPIO
@@ -123,36 +123,6 @@ menu "Servo Configuration"
     endmenu
 
     menu "Camera Configuration"
-        config CAMERA_WIDTH
-            int "Camera Capture Width"
-            default 640
-            help
-                UVC camera capture width in pixels.
-
-        config CAMERA_HEIGHT
-            int "Camera Capture Height"
-            default 480
-            help
-                UVC camera capture height in pixels.
-
-        config CAMERA_FPS
-            string "Camera FPS"
-            default "30"
-            help
-                UVC camera frames per second.
-
-        config DISPLAY_WIDTH
-            int "Display Width"
-            default 800
-            help
-                Display width after resize in pixels.
-
-        config DISPLAY_HEIGHT
-            int "Display Height"
-            default 600
-            help
-                Display height after resize in pixels.
-
         config CAMERA_FX
             string "Camera Focal Length X (fx)"
             default "266"

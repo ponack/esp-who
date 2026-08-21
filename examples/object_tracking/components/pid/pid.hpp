@@ -10,8 +10,21 @@ public:
 
     void reset();
 
-    void set_gains(float kp, float ki, float kd) {
-        kp_ = kp; ki_ = ki; kd_ = kd;
+    // Reset the controller state and jump the output to the given angle.
+    void reset(float output_init);
+
+    void set_gains(float kp, float ki, float kd)
+    {
+        kp_ = kp;
+        ki_ = ki;
+        kd_ = kd;
+    }
+
+    void set_output_limits(float output_min, float output_max)
+    {
+        output_min_ = output_min;
+        output_max_ = output_max;
+        output_ = std::clamp(output_, output_min_, output_max_);
     }
 
 private:

@@ -11,3 +11,5 @@ dependencies:
     version: '*'
   human_face_detect:
     version: '*'
+  espressif/esp_lcd_touch:
+    version: '*'

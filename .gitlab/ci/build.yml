@@ -69,6 +69,17 @@ build_example_qrcode_recognition:
   variables:
     EXAMPLE_DIR: examples/qrcode_recognition
 
+build_example_object_tracking:
+  extends:
+    - .build_template
+    - .rules:build:example_object_tracking
+  parallel:
+    matrix:
+      - IMAGE: [espressif/idf:release-v5.4, espressif/idf:release-v5.5, espressif/idf:release-v6.0, espressif/idf:release-v6.1]
+        TARGET: [esp32p4]
+  variables:
+    EXAMPLE_DIR: examples/object_tracking
+
 build_example_pp_ocr_v6:
   extends:
     - .build_template

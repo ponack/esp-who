@@ -8,7 +8,8 @@ MCPWM::MCPWM(gpio_num_t gen_gpio_num, int group_id) : MCPWM(gen_gpio_num, create
     m_timer_mutex = xSemaphoreCreateMutex();
 }
 
-MCPWM::MCPWM(gpio_num_t gen_gpio_num, mcpwm_timer_handle_t timer, int group_id) : m_timer(timer), m_group_id(group_id), m_timer_running(false), m_extern_timer(true)
+MCPWM::MCPWM(gpio_num_t gen_gpio_num, mcpwm_timer_handle_t timer, int group_id) :
+    m_timer(timer), m_group_id(group_id), m_timer_running(false), m_extern_timer(true)
 {
     mcpwm_operator_config_t oper_cfg = {};
     oper_cfg.group_id = group_id; // operator must be in the same group to the timer
@@ -22,8 +23,7 @@ MCPWM::MCPWM(gpio_num_t gen_gpio_num, mcpwm_timer_handle_t timer, int group_id) 
     ESP_ERROR_CHECK(mcpwm_new_generator(m_oper, &gen_cfg, &m_gen));
     // go high on counter empty
     ESP_ERROR_CHECK(mcpwm_generator_set_action_on_timer_event(
-        m_gen,
-        MCPWM_GEN_TIMER_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, MCPWM_TIMER_EVENT_EMPTY, MCPWM_GEN_ACTION_HIGH)));
+        m_gen, MCPWM_GEN_TIMER_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, MCPWM_TIMER_EVENT_EMPTY, MCPWM_GEN_ACTION_HIGH)));
     // go low on compare threshold
     ESP_ERROR_CHECK(mcpwm_generator_set_action_on_compare_event(
         m_gen, MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, m_cmpr, MCPWM_GEN_ACTION_LOW)));
@@ -69,7 +69,8 @@ esp_err_t MCPWM::enable_and_start_timer()
         return ESP_OK;
     }
     ESP_RETURN_ON_ERROR(mcpwm_timer_enable(m_timer), TAG, "Failed to enable mcpwm timer.");
-    ESP_RETURN_ON_ERROR(mcpwm_timer_start_stop(m_timer, MCPWM_TIMER_START_NO_STOP), TAG, "Failed to start mcpwm timer.");
+    ESP_RETURN_ON_ERROR(
+        mcpwm_timer_start_stop(m_timer, MCPWM_TIMER_START_NO_STOP), TAG, "Failed to start mcpwm timer.");
     m_timer_running = true;
     xSemaphoreGive(m_timer_mutex);
     return ESP_OK;
@@ -95,7 +96,8 @@ esp_err_t MCPWM::stop_and_disable_timer()
 
 esp_err_t MCPWM::set_servo_angle(float angle)
 {
-    ESP_RETURN_ON_ERROR(mcpwm_comparator_set_compare_value(m_cmpr, angle_to_cmpr_value(angle)), TAG, "Failed to set servo angle.");
+    ESP_RETURN_ON_ERROR(
+        mcpwm_comparator_set_compare_value(m_cmpr, angle_to_cmpr_value(angle)), TAG, "Failed to set servo angle.");
     return ESP_OK;
 }
 

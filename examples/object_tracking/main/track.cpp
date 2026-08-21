@@ -2,13 +2,18 @@
 #include "who_yield2idle.hpp"
 #include <cmath>
 #include <numbers>
-#include <cstdlib>
 
 namespace who {
 namespace app {
 namespace {
 const std::vector<uint8_t> kColorSelected = {0, 200, 0}; // green
 const std::vector<uint8_t> kColorOthers = {255, 0, 0};   // red
+
+// ByteTrack's track_buffer and the app-level "target lost" release merged
+// into one concept: how many frames a target may stay absent before it is
+// given up (both by the tracker and by the selection logic).
+constexpr int kTrackBuffer = 30;
+
 } // namespace
 
 WhoTouchPollTask::WhoTouchPollTask(QueueHandle_t tap_mailbox) :
@@ -61,8 +66,11 @@ WhoDetectTrackAppLCD::WhoDetectTrackAppLCD(frame_cap::WhoFrameCap *frame_cap) :
     WhoDetectAppBase(frame_cap),
     m_lcd_disp(new lcd_disp::WhoFrameLCDDisp("LCDDisp", frame_cap->get_last_node())),
     m_tap_mailbox(xQueueCreate(1, sizeof(touch_tap_t))),
-    m_pid_pan(atof(CONFIG_PAN_KP), atof(CONFIG_PAN_KI), atof(CONFIG_PAN_KD), CONFIG_PAN_INIT_ANGLE, CONFIG_PAN_MIN_ANGLE, CONFIG_PAN_MAX_ANGLE),
-    m_pid_tilt(atof(CONFIG_TILT_KP), atof(CONFIG_TILT_KI), atof(CONFIG_TILT_KD), CONFIG_TILT_INIT_ANGLE, CONFIG_TILT_MIN_ANGLE, CONFIG_TILT_MAX_ANGLE),
+    m_tuner(),
+    m_params(m_tuner.get()),
+    m_pid_pan(m_params.pan_kp, m_params.pan_ki, m_params.pan_kd, m_params.pan_init, m_params.pan_min, m_params.pan_max),
+    m_pid_tilt(
+        m_params.tilt_kp, m_params.tilt_ki, m_params.tilt_kd, m_params.tilt_init, m_params.tilt_min, m_params.tilt_max),
     m_target_id(-1),
     m_lost_frames(0)
 {
@@ -84,9 +92,9 @@ WhoDetectTrackAppLCD::WhoDetectTrackAppLCD(frame_cap::WhoFrameCap *frame_cap) :
     m_mcpwm_pan->get_timer(&timer, &group_id);
     m_mcpwm_tilt = std::make_unique<MCPWM>((gpio_num_t)CONFIG_TILT_GPIO, timer, group_id);
     m_mcpwm_pan->enable_and_start_timer();
-    m_mcpwm_pan->set_servo_angle(CONFIG_PAN_INIT_ANGLE);
-    m_mcpwm_tilt->set_servo_angle(CONFIG_TILT_INIT_ANGLE);
-    m_tracker = std::make_unique<BYTETracker>();
+    m_mcpwm_pan->set_servo_angle(m_params.pan_init);
+    m_mcpwm_tilt->set_servo_angle(m_params.tilt_init);
+    m_tracker = std::make_unique<BYTETracker>(30, kTrackBuffer);
 }
 
 WhoDetectTrackAppLCD::~WhoDetectTrackAppLCD()
@@ -108,8 +116,30 @@ bool WhoDetectTrackAppLCD::run()
     return ret;
 }
 
+void WhoDetectTrackAppLCD::apply_pending_params()
+{
+    TrackTuner::pending_t pending = m_tuner.consume_pending();
+    if (pending.params_changed) {
+        m_params = pending.params;
+        m_pid_pan.set_gains(m_params.pan_kp, m_params.pan_ki, m_params.pan_kd);
+        m_pid_pan.set_output_limits(m_params.pan_min, m_params.pan_max);
+        m_pid_tilt.set_gains(m_params.tilt_kp, m_params.tilt_ki, m_params.tilt_kd);
+        m_pid_tilt.set_output_limits(m_params.tilt_min, m_params.tilt_max);
+    }
+    if (pending.home_requested) {
+        m_target_id = -1;
+        m_lost_frames = 0;
+        m_pid_pan.reset(m_params.pan_init);
+        m_pid_tilt.reset(m_params.tilt_init);
+        m_mcpwm_pan->set_servo_angle(m_params.pan_init);
+        m_mcpwm_tilt->set_servo_angle(m_params.tilt_init);
+    }
+}
+
 void WhoDetectTrackAppLCD::detect_result_cb(const detect::WhoDetect::result_t &result)
 {
+    apply_pending_params();
+
     auto det_res = result.det_res;
 
     // Feed the tracker with the new detections.
@@ -144,7 +174,7 @@ void WhoDetectTrackAppLCD::detect_result_cb(const detect::WhoDetect::result_t &r
         }
         if (target) {
             m_lost_frames = 0;
-        } else if (++m_lost_frames > kMaxLostFrames) {
+        } else if (++m_lost_frames > kTrackBuffer) {
             // Selected target is gone for good, release the selection.
             m_target_id = -1;
         }
@@ -173,8 +203,9 @@ void WhoDetectTrackAppLCD::detect_result_cb(const detect::WhoDetect::result_t &r
         float cx = (target->tlbr[0] + target->tlbr[2]) / 2.0f;
         float cy = (target->tlbr[1] + target->tlbr[3]) / 2.0f;
 
-        float error_x = std::atan2(CONFIG_PAN_DIR * (cx - m_half_w) / 2, atof(CONFIG_CAMERA_FX)) * 180.0f / std::numbers::pi;
-        float error_y = std::atan2(CONFIG_TILT_DIR * (cy - m_half_h) / 2, atof(CONFIG_CAMERA_FY)) * 180.0f / std::numbers::pi;
+        float error_x = std::atan2(m_params.pan_dir * (cx - m_half_w) / 2, m_params.cam_fx) * 180.0f / std::numbers::pi;
+        float error_y =
+            std::atan2(m_params.tilt_dir * (cy - m_half_h) / 2, m_params.cam_fy) * 180.0f / std::numbers::pi;
 
         float pan = m_pid_pan.compute(error_x);
         float tilt = m_pid_tilt.compute(error_y);

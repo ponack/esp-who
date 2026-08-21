@@ -259,8 +259,8 @@ void WhoDetectResultLCDDisp::lcd_disp_cb(VideoCapture::Frame *fb)
             }
             dl::image::draw_hollow_rectangle(img, x1, y1, x2, y2, color, 2);
             for (size_t i = 0; i + 1 < item.keypoint.size(); i += 2) {
-                if (item.keypoint[i] >= 0 && item.keypoint[i] < (int)img.width && item.keypoint[i + 1] >= 0
-                    && item.keypoint[i + 1] < (int)img.height) {
+                if (item.keypoint[i] >= 0 && item.keypoint[i] < (int)img.width && item.keypoint[i + 1] >= 0 &&
+                    item.keypoint[i + 1] < (int)img.height) {
                     dl::image::draw_point(img, item.keypoint[i], item.keypoint[i + 1], color, 3);
                 }
             }

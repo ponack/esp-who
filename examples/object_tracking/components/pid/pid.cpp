@@ -37,7 +37,7 @@ float PIDController::compute(float error)
     last_error_ = error;
 
     float output_delta = proportional + ki_ * integral_ + kd_ * derivative;
-    
+
     output_ += output_delta;
 
     float output_clamped = std::clamp(output_, output_min_, output_max_);
@@ -57,4 +57,10 @@ void PIDController::reset()
     last_error_ = 0.0;
     last_time_us_ = nowUs();
     first_update_ = true;
+}
+
+void PIDController::reset(float output_init)
+{
+    reset();
+    output_ = std::clamp(output_init, output_min_, output_max_);
 }
