@@ -77,7 +77,6 @@ extern "C" void app_main(void)
     ESP_ERROR_CHECK(bsp_led_set(leds[0], false));
 #endif
 
-    run_detect_lcd();
-    // try this if you don't have a lcd.
-    // run_detect_term();
+    // This board has no display; detections are printed to the serial monitor.
+    run_detect_term();
 }
