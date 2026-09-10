@@ -15,9 +15,92 @@
 
 static const char *TAG = "bsp_camera";
 
+#define OV3660_SCCB_ADDR 0x3C
+
+static i2c_master_bus_handle_t s_i2c_bus;
+static i2c_master_dev_handle_t s_sensor_dev;
+
+esp_err_t bsp_i2c_init(void)
+{
+    if (s_i2c_bus) {
+        return ESP_OK;
+    }
+
+    i2c_master_bus_config_t bus_cfg = {
+        .i2c_port = BSP_CAMERA_SCCB_PORT,
+        .sda_io_num = BSP_CAMERA_SIOD,
+        .scl_io_num = BSP_CAMERA_SIOC,
+        .clk_source = I2C_CLK_SRC_DEFAULT,
+        .glitch_ignore_cnt = 7,
+        .flags.enable_internal_pullup = true,
+    };
+    esp_err_t ret = i2c_new_master_bus(&bus_cfg, &s_i2c_bus);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "SCCB bus init failed: %s", esp_err_to_name(ret));
+        return ret;
+    }
+
+    i2c_device_config_t dev_cfg = {
+        .dev_addr_length = I2C_ADDR_BIT_LEN_7,
+        .device_address = OV3660_SCCB_ADDR,
+        .scl_speed_hz = BSP_CAMERA_SCCB_FREQ,
+    };
+    return i2c_master_bus_add_device(s_i2c_bus, &dev_cfg, &s_sensor_dev);
+}
+
+i2c_master_bus_handle_t bsp_i2c_get_handle(void)
+{
+    return s_i2c_bus;
+}
+
+esp_err_t bsp_camera_write_reg(uint16_t reg, uint8_t val)
+{
+    if (!s_sensor_dev) {
+        return ESP_ERR_INVALID_STATE;
+    }
+    uint8_t tx[3] = {(uint8_t)(reg >> 8), (uint8_t)(reg & 0xFF), val};
+    return i2c_master_transmit(s_sensor_dev, tx, sizeof(tx), 300);
+}
+
+esp_err_t bsp_camera_read_reg(uint16_t reg, uint8_t *val)
+{
+    if (!s_sensor_dev) {
+        return ESP_ERR_INVALID_STATE;
+    }
+    uint8_t tx[2] = {(uint8_t)(reg >> 8), (uint8_t)(reg & 0xFF)};
+    return i2c_master_transmit_receive(s_sensor_dev, tx, sizeof(tx), val, 1, 300);
+}
+
+esp_err_t bsp_camera_fix_sync_polarity(void)
+{
+    /* 0x4740: bit5 PCLK polarity, bit1 HREF polarity, bit0 VSYNC polarity.
+     * Determined empirically by sweeping values against the driver's frame
+     * error count while streaming; see the header for the full reasoning. */
+    const uint8_t kPolarity = 0x02;
+
+    esp_err_t ret = bsp_camera_write_reg(0x4740, kPolarity);
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "failed to set sync polarity: %s", esp_err_to_name(ret));
+        return ret;
+    }
+
+    uint8_t back = 0xFF;
+    if (bsp_camera_read_reg(0x4740, &back) == ESP_OK && back != kPolarity) {
+        ESP_LOGW(TAG, "sync polarity read back as 0x%02X, expected 0x%02X", back, kPolarity);
+    } else {
+        ESP_LOGI(TAG, "sync polarity set to 0x%02X", kPolarity);
+    }
+    return ESP_OK;
+}
+
 esp_err_t bsp_camera_start(const bsp_camera_cfg_t *cfg)
 {
     (void)cfg;
+
+    esp_err_t bus_ret = bsp_i2c_init();
+    if (bus_ret != ESP_OK) {
+        return bus_ret;
+    }
 
     esp_cam_sensor_xclk_handle_t xclk_handle = NULL;
 
@@ -50,13 +133,10 @@ esp_err_t bsp_camera_start(const bsp_camera_cfg_t *cfg)
 
     const esp_video_init_dvp_config_t dvp_config = {
         .sccb_config = {
-            /* Nothing else sits on this bus, so let esp_video own it. */
-            .init_sccb = true,
-            .i2c_config = {
-                .port = BSP_CAMERA_SCCB_PORT,
-                .scl_pin = BSP_CAMERA_SIOC,
-                .sda_pin = BSP_CAMERA_SIOD,
-            },
+            /* The BSP owns the bus so sensor registers remain writable after
+             * the driver has applied its format table. */
+            .init_sccb = false,
+            .i2c_handle = s_i2c_bus,
             .freq = BSP_CAMERA_SCCB_FREQ,
         },
         .reset_pin = BSP_CAMERA_RST,

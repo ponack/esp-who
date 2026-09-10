@@ -38,10 +38,17 @@ extern "C" {
 #define BSP_CAMERA_PCLK      (GPIO_NUM_13)
 
 /*
- * Confirmed by capture: with these swapped the driver reported truncated frames
- * (esp_cam_ctlr_dvp "RX:115200-14400"); this way round frames arrive complete.
+ * Measured while the DVP driver was streaming at a known 24fps, which is the
+ * only way these two can be told apart reliably:
+ *   GPIO38 -> 50 edges/s  (~25 Hz, frame rate)  = VSYNC
+ *   GPIO47 -> 11980 edges/s (~5990 Hz, line rate) = HREF
+ *
+ * GPIO41 is static and carries nothing. Earlier probing wrongly assumed the two
+ * non-data pins that showed activity under a test pattern had to be the sync
+ * pair; with VSYNC absent the controller never saw a frame boundary and frames
+ * terminated at arbitrary fractions of the buffer.
  */
-#define BSP_CAMERA_VSYNC (GPIO_NUM_41)
+#define BSP_CAMERA_VSYNC (GPIO_NUM_38)
 #define BSP_CAMERA_HSYNC (GPIO_NUM_47)
 
 /*
@@ -85,6 +92,44 @@ typedef struct {
  *             that esp-who's examples expect.
  */
 esp_err_t bsp_camera_start(const bsp_camera_cfg_t *cfg);
+
+/**
+ * @brief Initialise the SCCB I2C bus (idempotent).
+ *
+ * The BSP owns the bus rather than letting esp_video create it, so sensor
+ * registers stay reachable after streaming has started.
+ */
+esp_err_t bsp_i2c_init(void);
+
+/** @brief Handle for the SCCB bus, valid after bsp_i2c_init(). */
+i2c_master_bus_handle_t bsp_i2c_get_handle(void);
+
+/**
+ * @brief Write one 16-bit-addressed sensor register.
+ *
+ * Needed because some sensor settings have to be corrected after the driver has
+ * applied its own format table - notably 0x4740, the PCLK/HREF/VSYNC polarity
+ * control.
+ */
+esp_err_t bsp_camera_write_reg(uint16_t reg, uint8_t val);
+
+/** @brief Read one 16-bit-addressed sensor register. */
+esp_err_t bsp_camera_read_reg(uint16_t reg, uint8_t *val);
+
+/**
+ * @brief Correct the sensor's sync polarity. Call AFTER the capture pipeline
+ *        has been created, not before.
+ *
+ * The esp_cam_sensor OV3660 format tables write 0x4740 = 0x21 (VSYNC active
+ * high), but the ESP32-S3 DVP controller hardcodes negative-edge VSYNC with an
+ * inverted CAM_V_SYNC connection. With 0x21 every frame terminates at exactly
+ * 1/8 of the buffer. 0x02 (PCLK active low, HREF active high, VSYNC active low)
+ * measured completely clean; every value with bit0 set failed hard.
+ *
+ * The driver applies its table during VIDIOC_S_FMT, so this has to run after the
+ * pipeline exists or it will simply be overwritten.
+ */
+esp_err_t bsp_camera_fix_sync_polarity(void);
 
 /* ---- Display: not present on this board ----
  *
