@@ -1,3 +1,10 @@
+# NOTE: this must be kept in step with -DDETECT_MODEL=... on the idf.py command
+# line. Upstream regenerates this file from that flag via tools/bsp_ext.py, but
+# that path only recognises Espressif's own BSP names and writes the BSP in as a
+# registry dependency, which cannot work for a local component like
+# esp32_s3_cam. We therefore pass -DBSP= directly and maintain this by hand.
+#
+# Changing only -DDETECT_MODEL will silently keep building the model named here.
 dependencies:
   human_face_detect:
     version: '*'
