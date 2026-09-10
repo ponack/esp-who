@@ -76,7 +76,7 @@ esp_err_t bsp_camera_fix_sync_polarity(void)
     /* 0x4740: bit5 PCLK polarity, bit1 HREF polarity, bit0 VSYNC polarity.
      * Determined empirically by sweeping values against the driver's frame
      * error count while streaming; see the header for the full reasoning. */
-    const uint8_t kPolarity = 0x02;
+    const uint8_t kPolarity = 0x20;
 
     esp_err_t ret = bsp_camera_write_reg(0x4740, kPolarity);
     if (ret != ESP_OK) {

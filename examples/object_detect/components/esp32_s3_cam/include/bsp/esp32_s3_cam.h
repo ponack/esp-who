@@ -123,8 +123,13 @@ esp_err_t bsp_camera_read_reg(uint16_t reg, uint8_t *val);
  * The esp_cam_sensor OV3660 format tables write 0x4740 = 0x21 (VSYNC active
  * high), but the ESP32-S3 DVP controller hardcodes negative-edge VSYNC with an
  * inverted CAM_V_SYNC connection. With 0x21 every frame terminates at exactly
- * 1/8 of the buffer. 0x02 (PCLK active low, HREF active high, VSYNC active low)
- * measured completely clean; every value with bit0 set failed hard.
+ * 1/8 of the buffer.
+ *
+ * 0x20 flips only bit0, giving VSYNC active low while leaving PCLK active high.
+ * Note that 0x02 scores marginally better on the driver's frame-error counter
+ * but is WRONG: clearing bit5 moves PCLK to active low, which samples on the
+ * opposite edge and yields correctly sized frames full of banded garbage. Judge
+ * this register by the decoded image, not by the error count.
  *
  * The driver applies its table during VIDIOC_S_FMT, so this has to run after the
  * pipeline exists or it will simply be overwritten.
