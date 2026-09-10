@@ -18,8 +18,19 @@ using namespace who::app;
 dl::detect::Detect *get_detect_model()
 {
 #if defined(CONFIG_HUMAN_FACE_DETECT_MODEL_LOCATION)
-    return new HumanFaceDetect(static_cast<HumanFaceDetect::model_type_t>(CONFIG_DEFAULT_HUMAN_FACE_DETECT_MODEL),
-                               false);
+    auto *model =
+        new HumanFaceDetect(static_cast<HumanFaceDetect::model_type_t>(CONFIG_DEFAULT_HUMAN_FACE_DETECT_MODEL),
+                            false);
+    // MSRMNP is two stages: MSR proposes regions, MNP refines and scores them.
+    // On this camera MSR's proposals score below 0.15, so at the shared default
+    // of 0.5 nothing ever reaches MNP and no face is ever reported - even for a
+    // large, sharp, well-lit face. Measured over 10 frames with a face present:
+    //   MSR 0.50 ->  0/10 frames    MSR 0.10 ->  0/10 frames
+    //   MSR 0.05 -> 10/10 frames, scores 0.731..1.000  (~1.1 boxes/frame)
+    //   MSR 0.02 -> 10/10 frames, 78 boxes             (false positives)
+    // Loosen stage 1 only; MNP stays at its default so output stays confident.
+    model->set_score_thr(0.05f, 0);
+    return model;
 #elif defined(CONFIG_PEDESTRIAN_DETECT_MODEL_LOCATION)
     return new PedestrianDetect(static_cast<PedestrianDetect::model_type_t>(CONFIG_DEFAULT_PEDESTRIAN_DETECT_MODEL),
                                 false);
@@ -77,7 +88,6 @@ extern "C" void app_main(void)
     ESP_ERROR_CHECK(bsp_led_set(leds[0], false));
 #endif
 
-    run_detect_lcd();
-    // try this if you don't have a lcd.
-    // run_detect_term();
+    // This board has no display; detections are printed to the serial monitor.
+    run_detect_term();
 }

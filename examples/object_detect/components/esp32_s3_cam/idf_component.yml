@@ -1,0 +1,8 @@
+## IDF Component Manager Manifest File
+dependencies:
+  espressif/esp_video:
+    version: "*"
+    public: true
+  espressif/esp_cam_sensor:
+    version: "*"
+    public: true
