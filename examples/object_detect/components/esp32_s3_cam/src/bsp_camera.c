@@ -2,8 +2,11 @@
  * Camera bring-up for the Meshnology W11 ESP32-S3 CAM.
  *
  * Modelled on Espressif's esp32_s3_eye BSP, trimmed to what this board actually
- * has: a DVP camera and nothing else. SCCB is left for esp_video to initialise,
- * since no other peripheral shares the bus here.
+ * has: a DVP camera and nothing else.
+ *
+ * The BSP owns the SCCB bus (init_sccb = false) rather than letting esp_video
+ * create it, because the sensor's sync polarity has to be corrected after the
+ * driver has applied its format table - see bsp_camera_fix_sync_polarity().
  */
 
 #include "esp_cam_sensor_xclk.h"
@@ -74,8 +77,10 @@ esp_err_t bsp_camera_read_reg(uint16_t reg, uint8_t *val)
 esp_err_t bsp_camera_fix_sync_polarity(void)
 {
     /* 0x4740: bit5 PCLK polarity, bit1 HREF polarity, bit0 VSYNC polarity.
-     * Determined empirically by sweeping values against the driver's frame
-     * error count while streaming; see the header for the full reasoning. */
+     * 0x20 flips only VSYNC, leaving PCLK active high as the sensor default has
+     * it. Chosen by inspecting the decoded image, NOT by the driver's frame
+     * error counter - 0x02 scores slightly better on that counter but samples
+     * PCLK on the wrong edge and produces banded garbage. See the header. */
     const uint8_t kPolarity = 0x20;
 
     esp_err_t ret = bsp_camera_write_reg(0x4740, kPolarity);
@@ -168,8 +173,9 @@ esp_err_t bsp_camera_start(const bsp_camera_cfg_t *cfg)
     ret = esp_video_init(&cam_config);
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "esp_video_init failed: %s", esp_err_to_name(ret));
-        ESP_LOGE(TAG, "if the sensor was detected but capture will not frame, try swapping");
-        ESP_LOGE(TAG, "BSP_CAMERA_VSYNC/BSP_CAMERA_HSYNC (GPIO47/GPIO41) in bsp/esp32_s3_cam.h");
+        ESP_LOGE(TAG, "check the DVP pin map in bsp/esp32_s3_cam.h; note the sync pins are "
+                      "VSYNC=GPIO%d HREF=GPIO%d and GPIO41 carries nothing",
+                 BSP_CAMERA_VSYNC, BSP_CAMERA_HSYNC);
     }
     return ret;
 }
