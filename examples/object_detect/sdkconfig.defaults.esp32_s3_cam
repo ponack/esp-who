@@ -11,9 +11,12 @@ CONFIG_COMPILER_OPTIMIZATION_PERF=y
 # S3R8 die: 8MB octal PSRAM, verified at 80MHz with the memory test passing.
 CONFIG_SPIRAM=y
 CONFIG_SPIRAM_MODE_OCT=y
-# XIP from PSRAM puts instruction fetches on the same bus as camera DMA.
-# Disabled: with it on, DVP frames arrive truncated and VSYNC ISRs overflow.
-CONFIG_SPIRAM_XIP_FROM_PSRAM=n
+# Enabled, matching Espressif's own S3 camera BSP configs. This was briefly
+# turned off while chasing truncated DVP frames, on the theory that executing
+# from PSRAM starved the camera DMA. That theory was wrong - the real causes
+# were the VSYNC pin and sync polarity - and disabling it changed the error
+# rate only marginally (~62k vs ~70k per 75s, both broken).
+CONFIG_SPIRAM_XIP_FROM_PSRAM=y
 CONFIG_SPIRAM_SPEED_80M=y
 
 CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_240=y

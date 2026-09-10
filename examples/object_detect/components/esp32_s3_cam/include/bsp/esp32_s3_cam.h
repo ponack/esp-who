@@ -138,21 +138,26 @@ esp_err_t bsp_camera_fix_sync_polarity(void);
 
 /* ---- Display: not present on this board ----
  *
- * esp-who always compiles its LCD path (who_lcd is a hard dependency of
- * who_detect_app, whether or not the app uses it), so these symbols have to
- * exist to link. They are declared here and implemented as failing stubs.
+ * This board is camera-only: no panel, no backlight. esp-who nonetheless
+ * compiles its LCD path unconditionally (who_lcd is a hard dependency of
+ * who_detect_app regardless of which app path you use), so these symbols must
+ * exist for the link to succeed.
  *
- * The terminal app path (run_detect_term) never touches them. Anything that does
- * gets ESP_ERR_NOT_SUPPORTED and a log line, rather than a board that appears to
- * have a display and then misbehaves.
+ * They are implemented in bsp_display_stub.c and always fail. who_lcd wraps
+ * bsp_display_new() in ESP_ERROR_CHECK, so a build that actually tries to use
+ * the display aborts immediately with a logged explanation. That is deliberate:
+ * failing loudly at the first call beats pretending a panel exists.
  *
- * The resolution values below are nominal, sized to the camera output, and exist
- * only so the buffer arithmetic in who_lcd compiles.
+ * Use run_detect_term(); run_detect_lcd() cannot work here.
+ *
+ * The dimensions are zero because there is no display. who_lcd only ever uses
+ * them to size a buffer it allocates *after* bsp_display_new() has already
+ * aborted, so they are never read at runtime.
  */
 
-#define BSP_LCD_H_RES          (240)
-#define BSP_LCD_V_RES          (240)
-#define BSP_LCD_BITS_PER_PIXEL (16)
+#define BSP_LCD_H_RES          (0)
+#define BSP_LCD_V_RES          (0)
+#define BSP_LCD_BITS_PER_PIXEL (0)
 
 typedef struct {
     int max_transfer_sz;

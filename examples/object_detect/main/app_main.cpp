@@ -90,8 +90,4 @@ extern "C" void app_main(void)
 
     // This board has no display; detections are printed to the serial monitor.
     run_detect_term();
-
-    // The sensor driver's format table sets a VSYNC polarity the S3 DVP
-    // controller cannot use; correct it now that the pipeline exists.
-    ESP_ERROR_CHECK(bsp_camera_fix_sync_polarity());
 }

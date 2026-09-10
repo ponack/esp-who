@@ -67,6 +67,14 @@ WhoFrameCap *get_dvp_frame_cap_pipeline(bool lcd)
     cap->init(cfg);
     cap->start();
 
+#ifdef BSP_BOARD_ESP32_S3_CAM
+    // The OV3660 format tables leave VSYNC active high, which this SoC's DVP
+    // controller cannot use. It has to be corrected here rather than in
+    // bsp_camera_start(), because the sensor driver rewrites the register during
+    // VIDIOC_S_FMT, which happens inside cap->init() above.
+    ESP_ERROR_CHECK(bsp_camera_fix_sync_polarity());
+#endif
+
     auto frame_cap = new WhoFrameCap();
     frame_cap->add_node<WhoFetchNode>("FrameCapFetch", cap);
     return frame_cap;
